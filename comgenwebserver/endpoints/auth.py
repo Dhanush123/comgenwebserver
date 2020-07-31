@@ -5,8 +5,8 @@ from flask import session, request, jsonify
 from flask_cors import cross_origin
 
 from comgenwebserver import app
-
-token_url = 'https://github.com/login/oauth/access_token'
+from comgenwebserver.constants import GITHUB_ACCESS_TOKEN_URL
+from comgenwebserver.db.service import DBClient
 
 
 @app.route('/githubcodetotoken', methods=['GET', 'POST'])
@@ -22,12 +22,16 @@ def handle_callback():
             'code': request.args['code']
         }
         headers = {'Accept': 'application/json'}
-        req = requests.post(token_url, params=payload, headers=headers)
+        req = requests.post(GITHUB_ACCESS_TOKEN_URL,
+                            params=payload, headers=headers)
         resp = req.json()
 
         if 'access_token' in resp:
-            session['access_token'] = resp['access_token']
-            return jsonify(access_token=resp['access_token'])
+            db = DBClient(resp['access_token'])
+            db.create_user_info_and_repos()
+            return jsonify(success=True)
+            # session['access_token'] = resp['access_token']
+            # return jsonify(access_token=resp['access_token'])
         else:
             return jsonify(error='Error retrieving access_token'), 404
     else:
