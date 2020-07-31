@@ -26,7 +26,7 @@ class DBClient(object):
         for repo in user_repos:
             repo_extracted = {"id": repo.id, "name": repo.name, "html_url": repo.html_url,
                               "archive_url": repo.archive_url, "stargazers_count": repo.stargazers_count}
-            repos_extracted.append(copy.deepcopy(repo_extracted))
+            repos_extracted.append(repo_extracted)
         user_info_extracted["repos"] = repos_extracted
 
         final_data = GithubUserSchema().dump(user_info_extracted)
