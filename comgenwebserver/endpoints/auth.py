@@ -11,7 +11,7 @@ from comgenwebserver.db.service import DBClient
 
 @app.route('/githubcodetotoken', methods=['GET', 'POST'])
 @cross_origin(origin='localhost', headers=['Content- Type', 'Authorization'])
-def handle_callback():
+def get_github_token_from_code():
     '''
         temp code -> perm access token
     '''
@@ -28,10 +28,11 @@ def handle_callback():
 
         if 'access_token' in resp:
             db = DBClient(resp['access_token'])
-            db.create_user_info_and_repos()
-            return jsonify(success=True)
-            # session['access_token'] = resp['access_token']
-            # return jsonify(access_token=resp['access_token'])
+            if not db.is_existing_user():
+                # currently sync call, then return
+                # could use celery? for async (return after get code)
+                db.create_user_info_and_repos()
+            return jsonify(access_token=resp['access_token']), 200
         else:
             return jsonify(error='Error retrieving access_token'), 404
     else:

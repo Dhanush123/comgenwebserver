@@ -8,26 +8,71 @@ from comgenwebserver.helpers.github import get_github_instance, get_github_user_
 
 
 class DBClient(object):
-    def __init__(self, access_token, repo_client=Repository(adapter=MongoRepository)):
+    def __init__(self, access_token, db_client=Repository(adapter=MongoRepository)):
         self.access_token = access_token
-        self.repo_client = repo_client
-
+        self.db_client = db_client
         if not access_token:
-            raise Exception("access_token not provided")
+            raise Exception('access_token not provided')
+        try:
+            self.github_instance = get_github_instance(self.access_token)
+        except:
+            raise Exception("unable to get_github_instance from access_token")
 
     def create_user_info_and_repos(self):
-        github_instance = get_github_instance(self.access_token)
-        user_info = get_github_user_info(github_instance)
-        user_repos = get_github_user_repos(github_instance)
-        user_info_extracted = {"access_token": self.access_token, "id": user_info.id, "login": user_info.login,
-                               "name": user_info.name, "html_url": user_info.html_url}
+        try:
+            user_info = get_github_user_info(self.github_instance)
+            user_info_extracted = {'access_token': self.access_token, 'id': user_info.id, 'login': user_info.login,
+                                   'name': user_info.name, 'html_url': user_info.html_url}
+            user_info_extracted['repos'] = self.get_relevant_repos_info()
 
-        repos_extracted = []
-        for repo in user_repos:
-            repo_extracted = {"id": repo.id, "name": repo.name, "html_url": repo.html_url,
-                              "archive_url": repo.archive_url, "stargazers_count": repo.stargazers_count}
-            repos_extracted.append(repo_extracted)
-        user_info_extracted["repos"] = repos_extracted
+            final_data = GithubUserSchema().dump(user_info_extracted)
 
-        final_data = GithubUserSchema().dump(user_info_extracted)
-        self.repo_client.create(final_data)
+            print("create_user_info_and_repos",
+                  self.db_client.create(final_data))
+            return True
+        except Exception as e:
+            print('error in create_user_info_and_repos', e)
+            return False
+
+    def get_relevant_repos_info(self):
+        try:
+            user_repos = get_github_user_repos(self.github_instance)
+            repos_extracted = []
+            for repo in user_repos:
+                repo_extracted = {'id': repo.id, 'name': repo.name, 'html_url': repo.html_url,
+                                  'archive_url': repo.archive_url, 'stargazers_count': repo.stargazers_count}
+                repos_extracted.append(repo_extracted)
+            return repos_extracted
+        except Exception as e:
+            print('error in get_relevant_repos_info', e)
+            return []
+
+    def get_user_record(self):
+        user_info_latest = get_github_user_info(self.github_instance)
+        user_info_found = self.db_client.find(
+            {'id': f'{user_info_latest.id}'})
+        print("user_info_found", user_info_found["id"])
+        user_info_found = GithubUserSchema().dump(user_info_found)
+        return user_info_found
+
+    def is_existing_user(self):
+        try:
+            return bool(self.get_user_record())
+        except Exception as e:
+            print('error in is_existing_user', e)
+            return False
+
+    def toggle_repo_tracking_status(self, repo_id, toggle_status):
+        try:
+            user_record = self.get_user_record()
+            for repo in user_record['repos']:
+                if repo['id'] == repo_id:
+                    repo['tracking'] = toggle_status
+                    break
+
+            print('toggle_repo_tracking_status', self.db_client.update(
+                {'id': f'{user_record["id"]}'}, user_record))
+            return True
+        except Exception as e:
+            print('error in toggle_repo_tracking_status', e)
+            return False
