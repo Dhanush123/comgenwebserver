@@ -1,9 +1,11 @@
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, EXCLUDE
 
 from comgenwebserver.schema.githubrepo import GithubRepoSchema
 
 
 class GithubUserSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
     id = fields.Str(required=True)
     access_token = fields.Str(required=True)
     login = fields.Str(required=True)

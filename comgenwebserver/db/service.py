@@ -8,15 +8,21 @@ from comgenwebserver.helpers.github import get_github_instance, get_github_user_
 
 
 class DBClient(object):
-    def __init__(self, access_token, db_client=Repository(adapter=MongoRepository)):
+    def __init__(self, access_token='', db_client=Repository(adapter=MongoRepository)):
         self.access_token = access_token
         self.db_client = db_client
-        if not access_token:
-            raise Exception('access_token not provided')
-        try:
-            self.github_instance = get_github_instance(self.access_token)
-        except:
-            raise Exception("unable to get_github_instance from access_token")
+        self.github_instance = None
+        if access_token:
+            try:
+                self.github_instance = get_github_instance(self.access_token)
+            except:
+                raise Exception(
+                    "unable to get_github_instance from access_token")
+
+    def dump_github_user(self, data):
+        if '_id' in data:
+            del data['_id']
+        return GithubUserSchema().dump(data)
 
     def create_user_info_and_repos(self):
         try:
@@ -25,7 +31,7 @@ class DBClient(object):
                                    'name': user_info.name, 'html_url': user_info.html_url}
             user_info_extracted['repos'] = self.get_relevant_repos_info()
 
-            final_data = GithubUserSchema().dump(user_info_extracted)
+            final_data = self.dump_github_user(user_info_extracted)
 
             print("create_user_info_and_repos",
                   self.db_client.create(final_data))
@@ -52,8 +58,8 @@ class DBClient(object):
         user_info_found = self.db_client.find(
             {'id': f'{user_info_latest.id}'})
         print("user_info_found", user_info_found["id"])
-        user_info_found = GithubUserSchema().dump(user_info_found)
-        return user_info_found
+        user_info_validated = self.dump_github_user(user_info_found)
+        return user_info_validated
 
     def is_existing_user(self):
         try:
@@ -76,3 +82,6 @@ class DBClient(object):
         except Exception as e:
             print('error in toggle_repo_tracking_status', e)
             return False
+
+    def get_users_with_tracking_repos(self):
+        return self.db_client.find_all({'repos.tracking': True})

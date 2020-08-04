@@ -1,7 +1,9 @@
-from marshmallow import Schema, fields, pre_dump
+from marshmallow import Schema, fields, EXCLUDE
 
 
 class GithubRepoSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
     id = fields.Str(required=True)
     name = fields.Str(required=True)
     html_url = fields.Str(required=True)

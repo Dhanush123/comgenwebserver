@@ -27,7 +27,7 @@ def track_github_repo():
     try:
         access_token = request.args['access_token']
         repo_id = request.args['repo_id']
-        toggle_status = request.args['toggle_status']
+        toggle_status = request.args['toggle_status'] == 'true'
         db = DBClient(access_token)
         success_status = db.toggle_repo_tracking_status(repo_id, toggle_status)
         return jsonify(success=success_status)

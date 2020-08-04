@@ -12,6 +12,7 @@ pygithub = "*"
 pymongo = "*"
 marshmallow = "*"
 dnspython = "*"
+apscheduler = "*"
 
 [requires]
 python_version = "3.8"
