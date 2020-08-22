@@ -1,1 +1,6 @@
 GITHUB_ACCESS_TOKEN_URL = 'https://github.com/login/oauth/access_token'
+COMGEN_BRANCH = "comgen"
+FUNCTION_NAME_COLUMN = "function"
+AST_COLUMN = "ast"
+MODEL_EPOCH = 5
+AST_CSV_FIELDNAMES = [FUNCTION_NAME_COLUMN, AST_COLUMN]

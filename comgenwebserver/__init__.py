@@ -11,7 +11,7 @@ import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
 
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=comment_commit_files, trigger="interval", seconds=10)
+scheduler.add_job(func=comment_commit_files, trigger="interval", seconds=15)
 scheduler.start()
 
 atexit.register(lambda: scheduler.shutdown())

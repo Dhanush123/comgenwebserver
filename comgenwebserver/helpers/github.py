@@ -5,7 +5,7 @@ from github import Github
 
 from comgenwebserver.schema.githubuser import GithubUserSchema
 from comgenwebserver.schema.githubrepo import GithubRepoSchema
-from comgenwebserver.helpers.modelserverclient import get_commented_file
+from comgenwebserver.constants import COMGEN_BRANCH
 
 
 def get_github_instance(access_token):
@@ -45,10 +45,23 @@ def filter_tracking_repos(users_with_tracking_repos):
     return tracking_repos
 
 
+def get_repo_branches_list(repo):
+    return list(repo.get_branches())
+
+
+def create_comgen_branch(repo):
+    head_commit = repo.get_commit('HEAD')
+    ref = repo.create_git_ref(
+        f'refs/heads/{COMGEN_BRANCH}', head_commit.sha)
+
+
 def update_github_file_content(repo, old_file, new_file_content, commit_message):
-    #new_file_content = str
+    repo_has_comgen_branch = COMGEN_BRANCH in [
+        branch.name for branch in get_repo_branches_list(repo)]
+    if not repo_has_comgen_branch:
+        create_comgen_branch(repo)
     repo.update_file(old_file.filename, commit_message,
-                     new_file_content, old_file.sha)
+                     new_file_content, old_file.sha, branch="comgen")
 
 
 def get_github_file_content(repo, github_file):

@@ -13,6 +13,10 @@ pymongo = "*"
 marshmallow = "*"
 dnspython = "*"
 apscheduler = "*"
+astunparse = "*"
+tensorflow = "==1.15.2"
+multimodal-keras-wrapper = "*"
+comgenwebserver = {editable = true,path = "."}
 
 [requires]
-python_version = "3.8"
+python_version = "3.7.5"
