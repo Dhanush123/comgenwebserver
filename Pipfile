@@ -14,7 +14,7 @@ marshmallow = "*"
 dnspython = "*"
 apscheduler = "*"
 astunparse = "*"
-tensorflow = "==1.15.2"
+tensorflow = "==2.5.3"
 multimodal-keras-wrapper = "*"
 comgenwebserver = {editable = true,path = "."}
 
